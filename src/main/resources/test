@@ -1,2 +1,5 @@
 2018-04-30T13:00:01.434707Z	    2 Query insert into taxii_collection_x_taxii_content (flare_package_id, collection_id, available, timestamp) values (1, 1, true, '2016-02-19 13:38:41')
 2018-04-30T13:00:01.434707Z	    2 Query insert into taxii_message_header (date_occurred, extended_header, message_type_id, revoked, sent_from, sent_to, status, status_message, taxii_message_id, taxii_timestamp) values ('2016-06-28 06:34:25', 0, 10, 0, 8, null, null, null, '1220109767', '2016-06-28 06:34:25')
+2018-04-30T13:00:01.434707Z	    2 Query show full tables from `flare2_2` like 'password'
+2018-04-30T13:00:01.434707Z	    2 Query update message_migrate set version=1, message_id='d383168c-a37c-4946-973d-7d8286dde25a', migrate_status='migrated' where id=800 and version=0
+2018-04-30T13:00:01.434707Z	    2 Query select * from message where id='1888550177'
