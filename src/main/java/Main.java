@@ -16,7 +16,8 @@ public class Main {
         System.out.println(queryCounts.size() + " entries to sort.");
         List<Map.Entry<String, Integer>> results = new ArrayList<>(queryCounts.entrySet());
         results.sort(Map.Entry.comparingByValue());
-        results.stream().map(entry -> entry.getValue() + "\t" + entry.getKey()).forEach(System.out::println);
+        results.stream().filter(entry -> entry.getValue() > 1)
+                .map(entry -> entry.getValue() + "\t" + entry.getKey()).forEach(System.out::println);
 
         System.out.println("\n**********\nTable hits:\n");
         List<Map.Entry<String, Integer>> tableResults = new ArrayList<>(tableHits.entrySet());
@@ -37,15 +38,18 @@ public class Main {
                     continue;
                 }
                 // & 0x255 is equivalent of % 256. 11111111 1+2+4+8+16+32+64+128
-                line = line.substring(index+6);
+                line = line.substring(index+6).toLowerCase();
                 countQueries(queryCounts, line);
 
-                index = line.toLowerCase().indexOf("from", 9); //Search after "select _ "
+                index = line.indexOf(" from ", 9); //Search after "select _ "
                 if (index == -1) {
-                    System.out.println(count);
-                    continue;
+                    if (!line.startsWith("insert into")) {
+                        continue;
+                    }
+                    line = parseInsertQuery(line.substring(12));
+                } else {
+                    line = parseSelectQuery(line.substring(index + 6)); //take out " from "
                 }
-                line = parseQuery(line.substring(index + 5)); //take out "from "
 
                 countQueries(tableHits, line);
             }
@@ -55,7 +59,15 @@ public class Main {
         }
     }
 
-    static String parseQuery(String line) {
+    static String parseInsertQuery(String line) {
+        int index = line.indexOf("values");
+        if (index == -1) {
+            return line;
+        }
+        return "INSERT\t" + line.substring(0, index-1);
+    }
+
+    static String parseSelectQuery(String line) {
         int index = line.indexOf(' ');
         if (index == -1) {
             System.out.println(line);
@@ -65,7 +77,7 @@ public class Main {
         index = line.indexOf("where", index+2);
         line = line.substring(index+6); //col = 'x' and col2='y' limit 1
         line = line.replaceAll("=[^\\s)]+","");
-        return table + " " + line;
+        return "SELECT\t" + table + " " + line;
     }
 
     private static void countQueries(HashMap<String, Integer> queryMap, String line) {
