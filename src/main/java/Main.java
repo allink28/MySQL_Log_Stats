@@ -3,7 +3,7 @@ import java.util.*;
 
 public class Main {
 
-    private static final String INPUT_FILE = "src/main/resources/test";
+    private static final String INPUT_FILE = "src/main/resources/general.log.3";
     private static HashMap<String, Integer> queryCounts = new HashMap<>(512);
     private static HashMap<String, Integer> tableHits = new HashMap<>(64);
 
@@ -39,26 +39,32 @@ public class Main {
                 if (index == -1) {
                     continue;
                 }
-
                 line = line.substring(index+6).toLowerCase();//Start after "Query "
                 countQueries(queryCounts, line);
 
-                index = line.indexOf(" from ", 9); //Search after "select _ "
-                if (index == -1) {
-                    if (!line.startsWith("insert into")) {
-                        continue;
+                if (line.startsWith("select")) {
+                    index = line.indexOf(" from ", 9); //Search after "select _ "
+                    if (index == -1) {
+                        System.out.println("Weird select: " + line);
+                    } else {
+                        line = parseSelectQuery(line.substring(index + 6)); //take out " from "
                     }
+                } else if (line.startsWith("insert into")) {
                     line = parseInsertQuery(line.substring(12));
-                } else {
-                    line = parseSelectQuery(line.substring(index + 6)); //take out " from "
+                } else if (line.startsWith("update")) {
+                    line = parseUpdateQuery(line.substring(7));
                 }
-
                 countQueries(tableHits, line);
             }
+
             if (scanner.ioException() != null) {
                 throw scanner.ioException();
             }
         }
+    }
+
+    static String parseUpdateQuery(String line) {
+        return "UPDATE\t" + line.replaceAll("=[^\\s)]+","");
     }
 
     static String parseInsertQuery(String line) {
