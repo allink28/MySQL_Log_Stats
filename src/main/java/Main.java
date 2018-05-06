@@ -3,7 +3,7 @@ import java.util.*;
 
 public class Main {
 
-    private static final String INPUT_FILE = "src/main/resources/general.log.3";
+    private static final String INPUT_FILE = "src/main/resources/test";
     private static HashMap<String, Integer> queryCounts = new HashMap<>(512);
     private static HashMap<String, Integer> tableHits = new HashMap<>(64);
 
@@ -30,15 +30,17 @@ public class Main {
              Scanner scanner = new Scanner(inputStream, "UTF-8")) {
             int count = 0;
             while (scanner.hasNextLine()) {
-                ++count;
+                //Periodically print out line number
+                // % 2048 is equivalent of & 0x2047. 11111111111 1+2+4+8+16+32+64+128+256+512+1024
+                if ((++count & 2047) == 0)
+                    System.out.println(count);
                 String line = scanner.nextLine();
                 int index = line.indexOf("Query");
                 if (index == -1) {
-                    System.out.println(count);
                     continue;
                 }
-                // & 0x255 is equivalent of % 256. 11111111 1+2+4+8+16+32+64+128
-                line = line.substring(index+6).toLowerCase();
+
+                line = line.substring(index+6).toLowerCase();//Start after "Query "
                 countQueries(queryCounts, line);
 
                 index = line.indexOf(" from ", 9); //Search after "select _ "
@@ -62,7 +64,8 @@ public class Main {
     static String parseInsertQuery(String line) {
         int index = line.indexOf("values");
         if (index == -1) {
-            return line;
+//            System.out.println("Weird insert: " + line);
+            return "INSERT\t" + line;
         }
         return "INSERT\t" + line.substring(0, index-1);
     }
@@ -70,8 +73,8 @@ public class Main {
     static String parseSelectQuery(String line) {
         int index = line.indexOf(' ');
         if (index == -1) {
-            System.out.println(line);
-            return line;
+//            System.out.println("Weird select: " + line);
+            return "SELECT\t" + line;
         }
         String table = line.substring(0, index);
         index = line.indexOf("where", index+2);
