@@ -6,14 +6,14 @@ public class MainTest {
 
     @Test
     public void parseSelectQueryTest() {
-        String line = "taxii_collection this_ where this_.name='testfeed3' limit 1";
+        String line = "select blah from taxii_collection this_ where this_.name='testfeed3' limit 1";
         String result;
         System.out.println(result = Main.parseSelectQuery(line));
         assertFalse(result.contains("="));
-        line = "table this where (this.column1='one' and this.column2='2' and this.column3='e@mail.com')";
+        line = "select * from table this where (this.column1='one' and this.column2='2' and this.column3='e@mail.com')";
         System.out.println(result = Main.parseSelectQuery(line));
         assertFalse(result.contains("="));
-        line = "flare_user_X_flare_role this_ where (this_.user_id=9 and this_.role_id=5)";
+        line = "select blah from flare_user_X_flare_role this_ where (this_.user_id=9 and this_.role_id=5)";
         System.out.println(result = Main.parseSelectQuery(line));
         assertFalse(result.contains("="));
     }

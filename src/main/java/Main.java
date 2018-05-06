@@ -4,8 +4,8 @@ import java.util.*;
 public class Main {
 
     private static final String INPUT_FILE = "src/main/resources/general.log.3";
-    private static HashMap<String, Integer> queryCounts = new HashMap<>(512);
-    private static HashMap<String, Integer> tableHits = new HashMap<>(64);
+    private static HashMap<String, Integer> queryCounts = new HashMap<>(1024);
+    private static HashMap<String, Integer> tableHits = new HashMap<>(256);
 
     public static void main(String[] args) throws IOException {
         readLineByLine(INPUT_FILE);
@@ -43,12 +43,7 @@ public class Main {
                 countQueries(queryCounts, line);
 
                 if (line.startsWith("select")) {
-                    index = line.indexOf(" from ", 9); //Search after "select _ "
-                    if (index == -1) {
-                        System.out.println("Weird select: " + line);
-                    } else {
-                        line = parseSelectQuery(line.substring(index + 6)); //take out " from "
-                    }
+                    line = parseSelectQuery(line);
                 } else if (line.startsWith("insert into")) {
                     line = parseInsertQuery(line.substring(12));
                 } else if (line.startsWith("update")) {
@@ -77,9 +72,16 @@ public class Main {
     }
 
     static String parseSelectQuery(String line) {
-        int index = line.indexOf(' ');
+        int index = line.indexOf(" from ", 8); //Search after "select _ "
         if (index == -1) {
-//            System.out.println("Weird select: " + line);
+//           System.out.println("Weird select: " + line);
+            return line;
+        }
+        line = line.substring(index + 6); //take out " from "
+
+        index = line.indexOf(' ');
+        if (index == -1) {
+            System.out.println("Weird select: " + line);
             return "SELECT\t" + line;
         }
         String table = line.substring(0, index);
