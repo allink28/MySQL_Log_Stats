@@ -5,6 +5,7 @@ public class Main {
 
     private static final String INPUT_FILE = "src/main/resources/general.log.3";
     private static HashMap<String, Integer> queryCounts = new HashMap<>(512);
+    private static HashMap<String, Integer> tableHits = new HashMap<>(64);
 
     public static void main(String[] args) throws IOException {
         readLineByLine(INPUT_FILE);
@@ -15,25 +16,38 @@ public class Main {
         System.out.println(queryCounts.size() + " entries to sort.");
         List<Map.Entry<String, Integer>> results = new ArrayList<>(queryCounts.entrySet());
         results.sort(Map.Entry.comparingByValue());
-//        System.out.println("\n\n");
-//        for (int i = results.size()-1; i > -1; --i) {
-//            Map.Entry<String, Integer> entry = results.get(i);
-//            System.out.println(entry.getValue() + "\t" + entry.getKey());
-//        }
         results.stream().map(entry -> entry.getValue() + "\t" + entry.getKey()).forEach(System.out::println);
+
+        System.out.println("\n**********\nTable hits:\n");
+        List<Map.Entry<String, Integer>> tableResults = new ArrayList<>(tableHits.entrySet());
+        tableResults.sort(Map.Entry.comparingByValue());
+        tableResults.stream().map(entry -> entry.getValue() + "\t" + entry.getKey()).forEach(System.out::println);
     }
 
     private static void readLineByLine(String filePath) throws IOException {
         try (FileInputStream inputStream = new FileInputStream(filePath);
-             Scanner scanner = new Scanner(inputStream, "UTF-8")){
-
+             Scanner scanner = new Scanner(inputStream, "UTF-8")) {
+            int count = 0;
             while (scanner.hasNextLine()) {
+                ++count;
                 String line = scanner.nextLine();
                 int index = line.indexOf("Query");
-                if (index == -1)
+                if (index == -1) {
+                    System.out.println(count);
                     continue;
+                }
                 // & 0x255 is equivalent of % 256. 11111111 1+2+4+8+16+32+64+128
-                countQueries(line.substring(index+6));
+                line = line.substring(index+6);
+                countQueries(queryCounts, line);
+
+                index = line.toLowerCase().indexOf("from", 9); //Search after "select _ "
+                if (index == -1) {
+                    System.out.println(count);
+                    continue;
+                }
+                line = parseQuery(line.substring(index + 5)); //take out "from "
+
+                countQueries(tableHits, line);
             }
             if (scanner.ioException() != null) {
                 throw scanner.ioException();
@@ -41,12 +55,25 @@ public class Main {
         }
     }
 
-    private static void countQueries(String line) {
-        Integer count = queryCounts.get(line);
+    static String parseQuery(String line) {
+        int index = line.indexOf(' ');
+        if (index == -1) {
+            System.out.println(line);
+            return line;
+        }
+        String table = line.substring(0, index);
+        index = line.indexOf("where", index+2);
+        line = line.substring(index+6); //col = 'x' and col2='y' limit 1
+        line = line.replaceAll("=[^\\s)]+","");
+        return table + " " + line;
+    }
+
+    private static void countQueries(HashMap<String, Integer> queryMap, String line) {
+        Integer count = queryMap.get(line);
         if (count == null) {
-            queryCounts.put(line, 1);
+            queryMap.put(line, 1);
         } else {
-            queryCounts.put(line, ++count);
+            queryMap.put(line, ++count);
         }
     }
 
